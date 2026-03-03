@@ -1,0 +1,28 @@
+# Ignore native folders (EAS generates these in the cloud)
+
+android/
+ios/
+
+# Ignore dependencies
+
+node_modules/
+
+# Ignore development and build artifacts
+
+.expo/
+.git/
+dist/
+web-build/
+*.log
+*.tsbuildinfo
+
+# Ignore all large video/media formats by default
+
+*.zip
+*.mov
+*.mp4
+*.avi
+
+# EXCEPTION: Do NOT ignore the splash screen video
+
+!assets/welcome.mp4

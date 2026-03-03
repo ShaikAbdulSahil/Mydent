@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "mydent",
+    "slug": "mydent",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E9F9FA"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#E9F9FA"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#E9F9FA"
+      },
+      "package": "com.sahilshaik786.mydent",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDN8BFsIZT6n7vYcrn4Jw0NHWKUkIifZVw"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a028b5ad-41b5-4f9f-a20d-37477dce0302"
+      }
+    },
+    "owner": "sahilshaik"
+  }
+}

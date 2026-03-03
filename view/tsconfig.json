@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "types": [
+      "geojson",
+      "node"
+    ],
+    "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "jsx": "react-native",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@tanstack/react-query": [
+        "node_modules/@tanstack/react-query/build/modern"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    "index.js",
+    "App.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "extends": "expo/tsconfig.base"
+}

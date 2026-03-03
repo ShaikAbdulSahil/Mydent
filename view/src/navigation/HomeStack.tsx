@@ -1,0 +1,210 @@
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from '../screens/Home';
+import ProfileScreen from '../screens/UserProfile';
+import ContactUsScreen from '../screens/ContactUsScreen';
+import ConsultationOptionScreen from '../screens/ConsultationOptionScreen';
+import AgeSelectionScreen from '../screens/AgeSelectionScreen';
+import TeethIssueSelectionScreen from '../screens/TeethIssueSelectionScreen';
+import ProblemDetailScreen from '../screens/ProblemDetailScreen';
+import MedicalHistoryScreen from '../screens/MedicalHistoryScreen';
+import GenderSelectionScreen from '../screens/GenderSelectionScreen';
+import SmokingStatusScreen from '../screens/SmokingStatusScreen';
+import AvailabilityScreen from '../screens/AvailabilityScreen';
+import CheckoutSummaryScreen from '../screens/CheckoutScreen';
+import EComScreen from '../screens/ECommerceScreen';
+import ProductDetailScreen from '../screens/ProductDetailScreen';
+import TeethTreatmentScreen from '../screens/TeethTreatmentScreen';
+import TreatmentInfoScreen from '../screens/TreatmentInfo';
+import FindBiteTypeScreen from '../screens/FindBiteTypeScreen';
+import TransformationScreen from '../screens/TransformationScreen';
+import TransformationBlogDetailsScreen from '../screens/TransformationBlogs';
+import { withAppShell } from '../utils/AppShellWrapper';
+import Centers from '../screens/CentersScreen';
+import BlogScreen from '../screens/BlogScreen';
+import AlignersForTeensScreen from '../screens/AlignersForTeens';
+import MyDentAlignersScreen from '../screens/MydentAligners';
+import CartScreen from '../screens/CartScreen';
+import BookingSuccessScreen from '../screens/BookingSuccessScreen';
+import ConsultationDetailsScreen from '../screens/ConsultationDetailsScreen';
+import ConsultationBookedScreen from '../screens/ConsultationBookedScreen';
+import FavProductScreen from '../screens/FavProductScreen';
+import PaymentScreen from '../screens/PaymentScreen';
+import ShowAllBlogsScreen from '../screens/ShowAllBlogsScreen';
+import TeethAlignmentProblems from '../components/TeethAlignmentProblems';
+import TermsAndConditionsScreen from '../screens/TermsAndConditionsScreen';
+import SmilePreview from '../screens/SmilePreview';
+import MyDentCoinsScreen from '../screens/MydentCoins';
+import NewTicketScreen from '../screens/NewTicket';
+import CancelTicketScreen from '../screens/CancelTicket';
+import LoginScreen from '../screens/Login';
+import BiteTypeVideosScreen from '../screens/BiteTypesVideoScreen';
+import TeethWhiteningScreen from '../screens/TeethWhiteningScreen';
+import ClinicMapScreen from '../screens/ClinicMapScreen';
+import WelcomeVideoScreen from '../screens/WelcomeScreen';
+import FormExampleScreen from '../screens/FormExampleScreen';
+import AppConfigScreen from '../screens/AppConfigScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import { Colors } from '../constants/Colors';
+
+const Stack = createNativeStackNavigator();
+
+export default function HomeStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        statusBarBackgroundColor: Colors.primaryBg,
+        statusBarStyle: 'dark',
+        statusBarTranslucent: false,
+      }}
+    >
+      {/* <Stack.Screen name="WelcomeVideoScreen" component={WelcomeVideoScreen} /> */}
+      <Stack.Screen name="Home" component={withAppShell(HomeScreen)} />
+      <Stack.Screen
+        name="BookingSuccessScreen"
+        component={withAppShell(BookingSuccessScreen)}
+      />
+      <Stack.Screen name="SmilePreview" component={SmilePreview} />
+      <Stack.Screen
+        name="BiteTypeVideosScreen"
+        component={withAppShell(BiteTypeVideosScreen)}
+      />
+      <Stack.Screen
+        name="TeethWhiteningScreen"
+        component={withAppShell(TeethWhiteningScreen)}
+      />
+      <Stack.Screen
+        name="TermsAndConditionsScreen"
+        component={withAppShell(TermsAndConditionsScreen)}
+      />
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen
+        name="TeethAlignmentProblems"
+        component={withAppShell(TeethAlignmentProblems)}
+      />
+      <Stack.Screen
+        name="ShowAllBlogsScreen"
+        component={withAppShell(ShowAllBlogsScreen)}
+      />
+      <Stack.Screen
+        name="PaymentScreen"
+        component={withAppShell(PaymentScreen)}
+      />
+      <Stack.Screen
+        name="MyDentCoinsScreen"
+        component={withAppShell(MyDentCoinsScreen)}
+      />
+      <Stack.Screen
+        name="NewTicketScreen"
+        component={withAppShell(NewTicketScreen)}
+      />
+      <Stack.Screen
+        name="CancelTicketScreen"
+        component={withAppShell(CancelTicketScreen)}
+      />
+      <Stack.Screen
+        name="ConsultationDetailsScreen"
+        component={withAppShell(ConsultationDetailsScreen)}
+      />
+      <Stack.Screen
+        name="ConsultationBookedScreen"
+        component={withAppShell(ConsultationBookedScreen)}
+      />
+      <Stack.Screen name="CartScreen" component={withAppShell(CartScreen)} />
+      <Stack.Screen name="BlogScreen" component={withAppShell(BlogScreen)} />
+      <Stack.Screen name="Profile" component={withAppShell(ProfileScreen)} />
+      <Stack.Screen name="EditProfile" component={withAppShell(EditProfileScreen)} />
+      <Stack.Screen
+        name="ContactUs"
+        component={withAppShell(ContactUsScreen)}
+      />
+      <Stack.Screen
+        name="ConsultationOption"
+        component={withAppShell(ConsultationOptionScreen)}
+      />
+      <Stack.Screen
+        name="AgeSelection"
+        component={withAppShell(AgeSelectionScreen)}
+      />
+      <Stack.Screen
+        name="TeethIssueSelection"
+        component={withAppShell(TeethIssueSelectionScreen)}
+      />
+      <Stack.Screen
+        name="ProblemDetail"
+        component={withAppShell(ProblemDetailScreen)}
+      />
+      <Stack.Screen name="Centers" component={withAppShell(Centers)} />
+      <Stack.Screen
+        name="MedicalHistory"
+        component={withAppShell(MedicalHistoryScreen)}
+      />
+      <Stack.Screen
+        name="GenderSelection"
+        component={withAppShell(GenderSelectionScreen)}
+      />
+      <Stack.Screen
+        name="SmokingStatus"
+        component={withAppShell(SmokingStatusScreen)}
+      />
+      <Stack.Screen
+        name="Availability"
+        component={withAppShell(AvailabilityScreen)}
+      />
+      <Stack.Screen
+        name="CheckoutSummary"
+        component={withAppShell(CheckoutSummaryScreen)}
+      />
+      <Stack.Screen name="EComScreen" component={withAppShell(EComScreen)} />
+      <Stack.Screen
+        name="AlignersForTeensScreen"
+        component={withAppShell(AlignersForTeensScreen)}
+      />
+      <Stack.Screen
+        name="MyDentAlignersScreen"
+        component={withAppShell(MyDentAlignersScreen)}
+      />
+      <Stack.Screen
+        name="ProductDetailScreen"
+        component={withAppShell(ProductDetailScreen)}
+      />
+      <Stack.Screen
+        name="TeethTreatmentScreen"
+        component={withAppShell(TeethTreatmentScreen)}
+      />
+      <Stack.Screen
+        name="TransformationScreen"
+        component={withAppShell(TransformationScreen)}
+      />
+      <Stack.Screen
+        name="TransformationBlogDetailsScreen"
+        component={withAppShell(TransformationBlogDetailsScreen)}
+      />
+      <Stack.Screen
+        name="ClinicMap"
+        component={withAppShell(ClinicMapScreen)}
+      />
+      <Stack.Screen
+        name="TreatmentInfoScreen"
+        component={withAppShell(TreatmentInfoScreen)}
+      />
+      <Stack.Screen
+        name="FindBiteTypeScreen"
+        component={withAppShell(FindBiteTypeScreen)}
+      />
+      <Stack.Screen
+        name="FavProductScreen"
+        component={withAppShell(FavProductScreen)}
+        options={{ title: 'Favorites' }}
+      />
+      <Stack.Screen
+        name="FormExample"
+        component={FormExampleScreen}
+      />
+      <Stack.Screen
+        name="AppConfig"
+        component={AppConfigScreen}
+      />
+    </Stack.Navigator>
+  );
+}

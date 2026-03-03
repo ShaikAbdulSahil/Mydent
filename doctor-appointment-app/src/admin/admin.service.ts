@@ -1,0 +1,168 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { User, UserDocument } from 'src/user/user.schema';
+import { Doctor, DoctorDocument } from 'src/doctor/doc.schema';
+import { Model, Types } from 'mongoose';
+import { AssignedUserStatus } from 'src/common/auth-req';
+
+@Injectable()
+export class AdminService {
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Doctor.name) private doctorModel: Model<DoctorDocument>,
+  ) { }
+
+  async getAllUsers() {
+    return this.userModel.find();
+  }
+
+  async getUserById(id: string) {
+    return this.userModel.findById(id);
+  }
+
+  async getAllDoctors() {
+    return this.doctorModel.find();
+  }
+
+  async assignDoctorToUser(userId: string, doctorId: string, step: number) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const doctor = await this.doctorModel.findById(doctorId);
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    // Track if this is a reassignment
+    const isReassignment = !!user.assignedDoctor;
+
+    // If user already has a doctor assigned, clean up the old doctor's assignment
+    if (user.assignedDoctor) {
+      const oldDoctorId = user.assignedDoctor.doctorId.toString();
+      const oldDoctor = await this.doctorModel.findById(oldDoctorId);
+      if (oldDoctor && oldDoctor.assignedUser) {
+        // Remove the user from old doctor's assignedUser
+        oldDoctor.assignedUser = undefined;
+        await oldDoctor.save();
+      }
+    }
+
+    // Reassignment is allowed - overwrite existing assignments
+    // 1. Set doctor info on user
+    user.assignedDoctor = {
+      doctorId: new Types.ObjectId(doctorId),
+      step,
+      assignedAt: new Date(),
+      status: AssignedUserStatus.PENDING,
+    };
+
+    // 2. Set user info on doctor (overwrite if exists)
+    doctor.assignedUser = {
+      userId: new Types.ObjectId(userId),
+      passInfo: false, // default or derived value
+      assignedAt: new Date(),
+      status: AssignedUserStatus.PENDING,
+    };
+
+    try {
+      await Promise.all([user.save(), doctor.save()]);
+      return {
+        message: isReassignment ? 'Doctor reassigned successfully' : 'Doctor assigned successfully',
+        user
+      };
+    } catch (err) {
+      throw new InternalServerErrorException('Failed to assign doctor');
+    }
+  }
+
+  async updateUser(id: string, updateData: Partial<User>) {
+    const updated = await this.userModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+    if (!updated) {
+      throw new NotFoundException('User not found');
+    }
+    return updated;
+  }
+
+  async deleteUser(id: string) {
+    const deleted = await this.userModel.findByIdAndDelete(id);
+    if (!deleted) {
+      throw new NotFoundException('User not found');
+    }
+    return { message: 'User deleted successfully' };
+  }
+
+  async updateDoctor(id: string, updateData: Partial<Doctor>) {
+    const updated = await this.doctorModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+    if (!updated) {
+      throw new NotFoundException('Doctor not found');
+    }
+    return updated;
+  }
+
+  async deleteDoctor(id: string) {
+    const deleted = await this.doctorModel.findByIdAndDelete(id);
+    if (!deleted) {
+      throw new NotFoundException('Doctor not found');
+    }
+    return { message: 'Doctor deleted successfully' };
+  }
+
+  async updateAssignedStep(userId: string, step: number) {
+    const user = await this.userModel.findById(userId);
+    if (!user || !user.assignedDoctor) {
+      throw new NotFoundException('User or assigned doctor not found');
+    }
+
+    user.assignedDoctor.step = step;
+    await user.save();
+    return { message: 'Assigned step updated successfully' };
+  }
+
+  async updatePassInfo(doctorId: string, passInfo: boolean) {
+    const doctor = await this.doctorModel.findById(doctorId);
+    if (!doctor || !doctor.assignedUser) {
+      throw new NotFoundException('Doctor or assigned user not found');
+    }
+
+    doctor.assignedUser.passInfo = passInfo;
+    await doctor.save();
+    return { message: 'Pass info updated successfully' };
+  }
+
+  async unassignDoctorFromUser(userId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!user.assignedDoctor) {
+      throw new BadRequestException('User does not have a doctor assigned');
+    }
+
+    // Get the doctor to clean up their assignedUser
+    const doctorId = user.assignedDoctor.doctorId.toString();
+    const doctor = await this.doctorModel.findById(doctorId);
+
+    // Remove assignment from user
+    user.assignedDoctor = undefined;
+
+    // Remove assignment from doctor if found
+    if (doctor && doctor.assignedUser) {
+      doctor.assignedUser = undefined;
+      await doctor.save();
+    }
+
+    try {
+      await user.save();
+      return { message: 'Doctor unassigned successfully' };
+    } catch (err) {
+      throw new InternalServerErrorException('Failed to unassign doctor');
+    }
+  }
+}
