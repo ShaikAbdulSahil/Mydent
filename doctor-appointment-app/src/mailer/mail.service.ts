@@ -10,7 +10,8 @@ export class MailerService {
 
   constructor(private readonly config: ConfigService) {
     const host = this.config.get<string>('SMTP_HOST') || 'smtp.gmail.com';
-    const port = parseInt(this.config.get<string>('SMTP_PORT') || '587', 10);
+    // Default to port 465 (SSL) - more reliable on cloud platforms like Render
+    const port = parseInt(this.config.get<string>('SMTP_PORT') || '465', 10);
     const user = this.config.get<string>('SMTP_USER');
     const pass = this.config.get<string>('SMTP_PASS');
     const fromEmail =
@@ -26,8 +27,15 @@ export class MailerService {
     this.transporter = nodemailer.createTransport({
       host,
       port,
-      secure: port === 465,
+      secure: port === 465, // true for 465 (SSL), false for 587 (STARTTLS)
       auth: { user, pass },
+      connectionTimeout: 30000, // 30 seconds
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
+      // TLS options for better compatibility with cloud environments
+      tls: {
+        rejectUnauthorized: false, // Allow self-signed certs (common in cloud)
+      },
     });
   }
 
