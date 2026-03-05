@@ -1,11 +1,12 @@
 // src/payments/razorpay.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Razorpay from 'razorpay';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class RazorpayService {
+  private readonly logger = new Logger(RazorpayService.name);
   private razorpay: Razorpay;
   private razorpayKeySecret: string;
 
@@ -16,10 +17,11 @@ export class RazorpayService {
     const keySecret = this.configService.get<string>('RAZORPAY_KEY_SECRET');
 
     // Store the secret for the verifySignature method
-     
-    
+
+
     // Check if keys exist before initializing (for better error handling)
     if (!keyId || !keySecret) {
+      this.logger.error('Razorpay keys not configured - payment processing will fail');
       throw new Error('Razorpay keys (RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET) must be set in the environment.');
     }
     this.razorpayKeySecret = keySecret;
@@ -50,7 +52,11 @@ export class RazorpayService {
       .update(`${order_id}|${payment_id}`)
       .digest('hex');
 
-    return generatedSignature === signature;
+    const isValid = generatedSignature === signature;
+    if (!isValid) {
+      this.logger.warn(`Signature verification failed for order: ${order_id}`);
+    }
+    return isValid;
   }
 
   fetchOrder(orderId: string) {

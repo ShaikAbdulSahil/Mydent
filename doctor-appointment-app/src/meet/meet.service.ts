@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Meet } from './meet.schema';
 
 @Injectable()
 export class MeetService {
-  constructor(@InjectModel(Meet.name) private meetModel: Model<Meet>) {}
+  private readonly logger = new Logger(MeetService.name);
+
+  constructor(@InjectModel(Meet.name) private meetModel: Model<Meet>) { }
 
   async createMeet(data: {
     userId: string;

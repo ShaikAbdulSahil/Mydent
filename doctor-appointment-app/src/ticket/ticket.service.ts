@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Ticket, TicketDocument, TicketStatus } from './ticket.schema';
 import { Model } from 'mongoose';
@@ -6,9 +6,11 @@ import { CreateTicketDto } from './ticket.dto';
 
 @Injectable()
 export class TicketsService {
+  private readonly logger = new Logger(TicketsService.name);
+
   constructor(
     @InjectModel(Ticket.name) private ticketModel: Model<TicketDocument>,
-  ) {}
+  ) { }
 
   async createTicket(
     dto: CreateTicketDto & { userId: string; fileUrl?: string },
@@ -29,10 +31,14 @@ export class TicketsService {
     ticketId: string,
     status: TicketStatus,
   ): Promise<Ticket | null> {
-    return this.ticketModel.findByIdAndUpdate(
+    const updated = await this.ticketModel.findByIdAndUpdate(
       ticketId,
       { status },
       { new: true },
     );
+    if (!updated) {
+      this.logger.warn(`Ticket not found: ${ticketId}`);
+    }
+    return updated;
   }
 }

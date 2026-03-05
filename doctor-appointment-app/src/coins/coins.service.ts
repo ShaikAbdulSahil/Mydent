@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Coins, CoinsDocument } from './coins.schema';
@@ -6,9 +6,11 @@ import { CreateCoinsDto, UpdateCoinsDto } from './coins.dto';
 
 @Injectable()
 export class CoinsService {
+  private readonly logger = new Logger(CoinsService.name);
+
   constructor(
     @InjectModel(Coins.name) private coinsModel: Model<CoinsDocument>,
-  ) {}
+  ) { }
 
   async create(createCoinsDto: CreateCoinsDto): Promise<Coins> {
     return this.coinsModel.create(createCoinsDto);
@@ -21,10 +23,14 @@ export class CoinsService {
   async findOne(userId: string) {
     try {
       const coin = await this.coinsModel.findOne({ userId });
-      if (!coin) throw new NotFoundException('Coins not found');
+      if (!coin) {
+        this.logger.warn(`Coins not found for user: ${userId}`);
+        throw new NotFoundException('Coins not found');
+      }
       return coin;
     } catch (err) {
-      console.log(err);
+      const error = err as Error;
+      this.logger.error(`Error finding coins for user ${userId}: ${error.message}`, error.stack);
       throw err;
     }
   }
@@ -37,12 +43,18 @@ export class CoinsService {
         new: true,
       },
     );
-    if (!updated) throw new NotFoundException('Coins not found');
+    if (!updated) {
+      this.logger.warn(`Coins not found for update: ${id}`);
+      throw new NotFoundException('Coins not found');
+    }
     return updated;
   }
 
   async remove(id: string): Promise<void> {
     const result = await this.coinsModel.findByIdAndDelete(id);
-    if (!result) throw new NotFoundException('Coins not found');
+    if (!result) {
+      this.logger.warn(`Coins not found for deletion: ${id}`);
+      throw new NotFoundException('Coins not found');
+    }
   }
 }

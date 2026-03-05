@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -13,6 +14,8 @@ import { AssignedUserStatus } from 'src/common/auth-req';
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Doctor.name) private doctorModel: Model<DoctorDocument>,
@@ -32,10 +35,16 @@ export class AdminService {
 
   async assignDoctorToUser(userId: string, doctorId: string, step: number) {
     const user = await this.userModel.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      this.logger.warn(`User not found: ${userId}`);
+      throw new NotFoundException('User not found');
+    }
 
     const doctor = await this.doctorModel.findById(doctorId);
-    if (!doctor) throw new NotFoundException('Doctor not found');
+    if (!doctor) {
+      this.logger.warn(`Doctor not found: ${doctorId}`);
+      throw new NotFoundException('Doctor not found');
+    }
 
     // Track if this is a reassignment
     const isReassignment = !!user.assignedDoctor;
@@ -75,6 +84,8 @@ export class AdminService {
         user
       };
     } catch (err) {
+      const error = err as Error;
+      this.logger.error(`Failed to assign doctor ${doctorId} to user ${userId}: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Failed to assign doctor');
     }
   }
@@ -84,6 +95,7 @@ export class AdminService {
       new: true,
     });
     if (!updated) {
+      this.logger.warn(`User not found for update: ${id}`);
       throw new NotFoundException('User not found');
     }
     return updated;
@@ -92,6 +104,7 @@ export class AdminService {
   async deleteUser(id: string) {
     const deleted = await this.userModel.findByIdAndDelete(id);
     if (!deleted) {
+      this.logger.warn(`User not found for deletion: ${id}`);
       throw new NotFoundException('User not found');
     }
     return { message: 'User deleted successfully' };
@@ -102,6 +115,7 @@ export class AdminService {
       new: true,
     });
     if (!updated) {
+      this.logger.warn(`Doctor not found for update: ${id}`);
       throw new NotFoundException('Doctor not found');
     }
     return updated;
@@ -110,6 +124,7 @@ export class AdminService {
   async deleteDoctor(id: string) {
     const deleted = await this.doctorModel.findByIdAndDelete(id);
     if (!deleted) {
+      this.logger.warn(`Doctor not found for deletion: ${id}`);
       throw new NotFoundException('Doctor not found');
     }
     return { message: 'Doctor deleted successfully' };
@@ -118,6 +133,7 @@ export class AdminService {
   async updateAssignedStep(userId: string, step: number) {
     const user = await this.userModel.findById(userId);
     if (!user || !user.assignedDoctor) {
+      this.logger.warn(`User or assigned doctor not found: ${userId}`);
       throw new NotFoundException('User or assigned doctor not found');
     }
 
@@ -129,6 +145,7 @@ export class AdminService {
   async updatePassInfo(doctorId: string, passInfo: boolean) {
     const doctor = await this.doctorModel.findById(doctorId);
     if (!doctor || !doctor.assignedUser) {
+      this.logger.warn(`Doctor or assigned user not found: ${doctorId}`);
       throw new NotFoundException('Doctor or assigned user not found');
     }
 
@@ -139,9 +156,13 @@ export class AdminService {
 
   async unassignDoctorFromUser(userId: string) {
     const user = await this.userModel.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      this.logger.warn(`User not found: ${userId}`);
+      throw new NotFoundException('User not found');
+    }
 
     if (!user.assignedDoctor) {
+      this.logger.warn(`User ${userId} does not have a doctor assigned`);
       throw new BadRequestException('User does not have a doctor assigned');
     }
 
@@ -162,6 +183,8 @@ export class AdminService {
       await user.save();
       return { message: 'Doctor unassigned successfully' };
     } catch (err) {
+      const error = err as Error;
+      this.logger.error(`Failed to unassign doctor from user ${userId}: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Failed to unassign doctor');
     }
   }

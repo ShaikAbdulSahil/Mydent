@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Doctor, DoctorDocument } from './doc.schema';
@@ -10,13 +10,15 @@ import { Review, ReviewDocument } from 'src/review/review.schema';
 
 @Injectable()
 export class DoctorService {
+  private readonly logger = new Logger(DoctorService.name);
+
   constructor(
     @InjectModel(Doctor.name) private doctorModel: Model<DoctorDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Appointment.name)
     private appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
-  ) {}
+  ) { }
 
   async findByEmail(email: string): Promise<DoctorDocument | null> {
     return this.doctorModel.findOne({ email }).exec();
@@ -87,6 +89,7 @@ export class DoctorService {
       paymentStatus: 'pending',
     });
 
+    this.logger.log(`Progress stats for doctor ${doctorId}: scanned=${scanned}, paymentDone=${paymentDone}, pending=${pending}`);
     return {
       scanned,
       paymentDone,

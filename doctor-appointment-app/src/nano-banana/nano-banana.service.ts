@@ -1,6 +1,7 @@
 import {
     Injectable,
     InternalServerErrorException,
+    Logger,
     ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -19,6 +20,7 @@ import { NanoBanana } from './nano-banana.schema';
  */
 @Injectable()
 export class NanoBananaService {
+    private readonly logger = new Logger(NanoBananaService.name);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     private readonly cloudinary = require('cloudinary').v2;
 
@@ -48,7 +50,8 @@ export class NanoBananaService {
             originalImageUrl = originalResult.secure_url;
             publicId = originalResult.public_id;
         } catch (error) {
-            console.error('Failed to upload original image:', error);
+            const err = error as Error;
+            this.logger.error(`Failed to upload original image for user ${userId}: ${err.message}`, err.stack);
             throw new InternalServerErrorException(
                 'Failed to upload image. Please try again.',
             );
@@ -60,7 +63,8 @@ export class NanoBananaService {
         try {
             enhancedImageUrl = await this.processSmileEnhancement(publicId);
         } catch (error) {
-            console.error('Smile enhancement failed:', error);
+            const err = error as Error;
+            this.logger.error(`Smile enhancement failed for user ${userId}: ${err.message}`, err.stack);
             throw new ServiceUnavailableException(
                 'Smile enhancement service is unavailable at the moment. Please try after some time.',
             );
@@ -126,20 +130,15 @@ export class NanoBananaService {
                 },
                 (error: any, result: any) => {
                     if (error) {
-                        console.error('Cloudinary explicit processing error:', error);
+                        this.logger.error(`Cloudinary explicit processing error: ${error.message}`);
                         return reject(error);
                     }
 
                     // Get the URL of the processed (eager) image
                     if (result?.eager?.[0]?.secure_url) {
-                        const enhancedUrl = result.eager[0].secure_url;
-                        console.log('=== Dental Treatment Visualization ===');
-                        console.log('Original:', publicId);
-                        console.log('Enhanced:', enhancedUrl);
-                        console.log('======================================');
-                        resolve(enhancedUrl);
+                        resolve(result.eager[0].secure_url);
                     } else {
-                        console.error('No eager result returned:', JSON.stringify(result, null, 2));
+                        this.logger.error(`No eager result returned: ${JSON.stringify(result)}`);
                         reject(new Error('Enhancement processing returned no result'));
                     }
                 },

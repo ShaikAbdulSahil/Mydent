@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Transformation } from './transformation.schema';
@@ -6,10 +6,12 @@ import { deleteFromCloudinary } from 'src/utils/cloudinary';
 
 @Injectable()
 export class TransformationService {
+  private readonly logger = new Logger(TransformationService.name);
+
   constructor(
     @InjectModel(Transformation.name)
     private transformationModel: Model<Transformation>,
-  ) {}
+  ) { }
 
   async createTransformation(data: {
     title: string;
@@ -27,6 +29,7 @@ export class TransformationService {
   async deleteTransformation(id: string): Promise<{ deleted: boolean }> {
     const result = await this.transformationModel.findByIdAndDelete(id);
     if (!result) {
+      this.logger.warn(`Transformation not found: ${id}`);
       throw new NotFoundException(`Transformation with ID ${id} not found`);
     }
 
@@ -41,6 +44,7 @@ export class TransformationService {
   ) {
     const blog = await this.transformationModel.findById(id);
     if (!blog) {
+      this.logger.warn(`Transformation not found for update: ${id}`);
       throw new NotFoundException(`Transformation with ID ${id} not found`);
     }
 

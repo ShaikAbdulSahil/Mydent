@@ -1,5 +1,5 @@
 // src/cart/cart.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CartItem } from './cart.schema';
@@ -7,22 +7,29 @@ import { Product } from '../product/product.schema';
 
 @Injectable()
 export class CartService {
+  private readonly logger = new Logger(CartService.name);
+
   constructor(
     @InjectModel('CartItem') private readonly cartModel: Model<CartItem>,
     @InjectModel('Product') private readonly productModel: Model<Product>,
-  ) {}
+  ) { }
 
   async addToCart(userId: string, productId: string, quantity: number) {
     const product = await this.productModel.findById(productId);
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) {
+      this.logger.warn(`Product not found: ${productId}`);
+      throw new NotFoundException('Product not found');
+    }
 
     // If quantity is not set or is 0
     if (product.quantity === undefined || product.quantity <= 0) {
+      this.logger.warn(`Product out of stock: ${productId}`);
       return { message: 'Product is out of stock' };
     }
 
     // If requested quantity > available stock
     if (quantity > product.quantity) {
+      this.logger.warn(`Insufficient stock for product ${productId}: requested ${quantity}, available ${product.quantity}`);
       return { message: `Only ${product.quantity} item(s) in stock` };
     }
 
@@ -68,7 +75,10 @@ export class CartService {
 
   async removeFromCart(id: string) {
     const item = await this.cartModel.findById(id);
-    if (!item) throw new NotFoundException('Cart item not found');
+    if (!item) {
+      this.logger.warn(`Cart item not found: ${id}`);
+      throw new NotFoundException('Cart item not found');
+    }
 
     const product = await this.productModel.findById(item.product);
     if (product) {
@@ -81,22 +91,31 @@ export class CartService {
 
   async updateQuantity(id: string, quantity: number) {
     const cartItem = await this.cartModel.findById(id);
-    if (!cartItem) throw new NotFoundException('Cart item not found');
+    if (!cartItem) {
+      this.logger.warn(`Cart item not found: ${id}`);
+      throw new NotFoundException('Cart item not found');
+    }
 
     const product = await this.productModel.findById(cartItem.product);
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) {
+      this.logger.warn(`Product not found for cart item: ${id}`);
+      throw new NotFoundException('Product not found');
+    }
 
     if (product.quantity === undefined || product.quantity < quantity) {
+      this.logger.warn(`Insufficient stock for quantity update: available ${product.quantity ?? 0}`);
       throw new Error(`Only ${product.quantity ?? 0} item(s) available`);
     }
 
     cartItem.quantity = quantity;
     await cartItem.save();
-
     return cartItem;
   }
 
   async clearCart(userId: string) {
-    return this.cartModel.deleteMany({ userId });
+    this.logger.log(`Clearing cart for user: ${userId}`);
+    const result = await this.cartModel.deleteMany({ userId });
+    this.logger.log(`Cart cleared for user ${userId}: ${result.deletedCount} items removed`);
+    return result;
   }
 }

@@ -4,7 +4,7 @@ import { getToken } from '../utils/storage';
 const axiosClient = axios.create({
   // baseURL: 'https://doctor-appointment-5j6e.onrender.com',
   baseURL: 'https://mydent-api.onrender.com',
-  timeout: 15000,
+  timeout: 60000, // 60s to handle Render free tier cold starts
 });
 
 // Attach token from storage to each request

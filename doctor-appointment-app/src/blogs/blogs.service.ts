@@ -1,5 +1,5 @@
 // blog.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog } from './blogs.schema';
 import { Model } from 'mongoose';
@@ -7,10 +7,12 @@ import { CreateBlogDto, EditBlogDto } from './blogs.dto';
 
 @Injectable()
 export class BlogService {
-  constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) {}
+  private readonly logger = new Logger(BlogService.name);
+
+  constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) { }
 
   async createBlog(data: CreateBlogDto) {
-    return await this.blogModel.create(data);
+    return this.blogModel.create(data);
   }
 
   async getAllBlogs() {
@@ -22,10 +24,18 @@ export class BlogService {
   }
 
   async editBlog(id: string, data: EditBlogDto) {
-    return await this.blogModel.findByIdAndUpdate(id, data, { new: true });
+    const updated = await this.blogModel.findByIdAndUpdate(id, data, { new: true });
+    if (!updated) {
+      this.logger.warn(`Blog not found for update: ${id}`);
+    }
+    return updated;
   }
 
   async deleteBlog(id: string) {
-    return await this.blogModel.findByIdAndDelete(id);
+    const result = await this.blogModel.findByIdAndDelete(id);
+    if (!result) {
+      this.logger.warn(`Blog not found for deletion: ${id}`);
+    }
+    return result;
   }
 }

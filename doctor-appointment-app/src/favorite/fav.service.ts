@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { FavItem } from './fav.schema';
@@ -6,14 +6,19 @@ import { Product } from '../product/product.schema';
 
 @Injectable()
 export class FavService {
+  private readonly logger = new Logger(FavService.name);
+
   constructor(
     @InjectModel('FavItem') private readonly favModel: Model<FavItem>,
     @InjectModel('Product') private readonly productModel: Model<Product>,
-  ) {}
+  ) { }
 
   async addToFavorite(userId: string, productId: string) {
     const product = await this.productModel.findById(productId);
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) {
+      this.logger.warn(`Product not found: ${productId}`);
+      throw new NotFoundException('Product not found');
+    }
 
     const existingFav = await this.favModel.findOne({
       userId,
@@ -44,7 +49,10 @@ export class FavService {
       userId,
     });
 
-    if (!item) throw new NotFoundException('Favorite item not found');
+    if (!item) {
+      this.logger.warn(`Favorite item not found: product ${productId} for user ${userId}`);
+      throw new NotFoundException('Favorite item not found');
+    }
 
     return item.deleteOne();
   }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { DoctorsTeam, DoctorsTeamDocument } from './team.schema';
@@ -7,12 +7,14 @@ import { User, UserDocument } from '../user/user.schema';
 
 @Injectable()
 export class DoctorsTeamService {
+  private readonly logger = new Logger(DoctorsTeamService.name);
+
   constructor(
     @InjectModel(DoctorsTeam.name)
     private doctorsTeamModel: Model<DoctorsTeamDocument>,
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
-  ) {}
+  ) { }
 
   async create(dto: CreateDoctorsTeamDto): Promise<DoctorsTeam> {
     return this.doctorsTeamModel.create(dto);
@@ -34,6 +36,7 @@ export class DoctorsTeamService {
     const user = await this.userModel.findById(userId).lean();
 
     if (!user || !user.doctorsTeam) {
+      this.logger.warn(`User or assigned doctor teams not found: ${userId}`);
       throw new NotFoundException('User or assigned doctor teams not found');
     }
 
@@ -64,13 +67,19 @@ export class DoctorsTeamService {
     const updated = await this.doctorsTeamModel.findByIdAndUpdate(id, dto, {
       new: true,
     });
-    if (!updated) throw new NotFoundException('Doctor not found');
+    if (!updated) {
+      this.logger.warn(`Doctors team not found for update: ${id}`);
+      throw new NotFoundException('Doctor not found');
+    }
     return updated;
   }
 
   async remove(id: string): Promise<void> {
     const result = await this.doctorsTeamModel.findByIdAndDelete(id);
-    if (!result) throw new NotFoundException('Doctor not found');
+    if (!result) {
+      this.logger.warn(`Doctors team not found for deletion: ${id}`);
+      throw new NotFoundException('Doctor not found');
+    }
   }
 
   // ✅ Assign 5 doctors team to user
@@ -79,6 +88,7 @@ export class DoctorsTeamService {
     teams: { id: string; date: string; time: string }[],
   ): Promise<UserDocument> {
     if (!teams || teams.length !== 5) {
+      this.logger.warn(`Invalid team count for user ${userId}: expected 5, got ${teams?.length}`);
       throw new Error('Exactly 5 doctors team entries must be provided');
     }
 
@@ -88,6 +98,7 @@ export class DoctorsTeamService {
     });
 
     if (foundTeams.length !== 5) {
+      this.logger.warn(`Some doctors team entries not found for user ${userId}`);
       throw new NotFoundException('Some DoctorsTeam entries not found');
     }
 
@@ -104,6 +115,7 @@ export class DoctorsTeamService {
     );
 
     if (!updatedUser) {
+      this.logger.warn(`User not found for doctors team assignment: ${userId}`);
       throw new NotFoundException('User not found');
     }
 
