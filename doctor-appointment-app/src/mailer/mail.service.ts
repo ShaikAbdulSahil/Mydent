@@ -1,42 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class MailerService {
   private readonly logger = new Logger(MailerService.name);
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
   private from: string;
 
   constructor(private readonly config: ConfigService) {
-    const host = this.config.get<string>('SMTP_HOST') || 'smtp.gmail.com';
-    // Default to port 465 (SSL) - more reliable on cloud platforms like Render
-    const port = parseInt(this.config.get<string>('SMTP_PORT') || '465', 10);
-    const user = this.config.get<string>('SMTP_USER');
-    const pass = this.config.get<string>('SMTP_PASS');
-    const fromEmail =
-      this.config.get<string>('FROM_EMAIL') || 'noreply@mydent.com';
+    const apiKey = this.config.get<string>('RESEND_API_KEY');
+    const fromEmail = this.config.get<string>('FROM_EMAIL') || 'onboarding@resend.dev';
     this.from = `Mydent <${fromEmail}>`;
 
-    if (!user || !pass) {
-      this.logger.error(
-        'SMTP_USER or SMTP_PASS is not set — email sending will fail',
-      );
+    if (!apiKey) {
+      this.logger.error('RESEND_API_KEY is not set — email sending will fail');
     }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465, // true for 465 (SSL), false for 587 (STARTTLS)
-      auth: { user, pass },
-      connectionTimeout: 30000, // 30 seconds
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
-      // TLS options for better compatibility with cloud environments
-      tls: {
-        rejectUnauthorized: false, // Allow self-signed certs (common in cloud)
-      },
-    });
+    this.resend = new Resend(apiKey);
   }
 
   /** Shared OTP email builder */
@@ -84,16 +65,23 @@ export class MailerService {
     );
 
     try {
-      const info = await this.transporter.sendMail({
+      const { data, error } = await this.resend.emails.send({
         from: this.from,
         to: email,
         subject: 'Your Mydent Login Code',
         html,
       });
-      this.logger.log(`OTP email sent to ${email}, messageId: ${info.messageId}`);
-      return { statusCode: 202, id: info.messageId };
+
+      if (error) {
+        this.logger.error(`Resend API error for ${email}: ${error.message}`);
+        throw new Error(error.message);
+      }
+
+      this.logger.log(`OTP email sent to ${email}, id: ${data?.id}`);
+      return { statusCode: 202, id: data?.id };
     } catch (err) {
-      this.logger.error(`Error sending OTP email to ${email}`, err);
+      const error = err as Error;
+      this.logger.error(`Error sending OTP email to ${email}: ${error.message}`);
       throw new Error('Failed to send OTP email');
     }
   }
@@ -110,16 +98,23 @@ export class MailerService {
     );
 
     try {
-      const info = await this.transporter.sendMail({
+      const { data, error } = await this.resend.emails.send({
         from: this.from,
         to: email,
         subject: 'Password Reset Code - Mydent',
         html,
       });
-      this.logger.log(`Password reset OTP sent to ${email}, messageId: ${info.messageId}`);
-      return { statusCode: 202, id: info.messageId };
+
+      if (error) {
+        this.logger.error(`Resend API error for ${email}: ${error.message}`);
+        throw new Error(error.message);
+      }
+
+      this.logger.log(`Password reset OTP sent to ${email}, id: ${data?.id}`);
+      return { statusCode: 202, id: data?.id };
     } catch (err) {
-      this.logger.error(`Error sending password reset OTP to ${email}`, err);
+      const error = err as Error;
+      this.logger.error(`Error sending password reset OTP to ${email}: ${error.message}`);
       throw new Error('Failed to send password reset email');
     }
   }
@@ -136,16 +131,23 @@ export class MailerService {
     );
 
     try {
-      const info = await this.transporter.sendMail({
+      const { data, error } = await this.resend.emails.send({
         from: this.from,
         to: email,
         subject: 'Verify Your Email - Mydent',
         html,
       });
-      this.logger.log(`Verification OTP sent to ${email}, messageId: ${info.messageId}`);
-      return { statusCode: 202, id: info.messageId };
+
+      if (error) {
+        this.logger.error(`Resend API error for ${email}: ${error.message}`);
+        throw new Error(error.message);
+      }
+
+      this.logger.log(`Verification OTP sent to ${email}, id: ${data?.id}`);
+      return { statusCode: 202, id: data?.id };
     } catch (err) {
-      this.logger.error(`Error sending verification OTP to ${email}`, err);
+      const error = err as Error;
+      this.logger.error(`Error sending verification OTP to ${email}: ${error.message}`);
       throw new Error('Failed to send verification email');
     }
   }
